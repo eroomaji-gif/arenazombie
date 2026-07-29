@@ -150,21 +150,16 @@ ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 10)
 
-
-
-
 -- ==========================================
--- 📌 โค้ดเพิ่มหมวดหมู่ "ออโต้เทรด" สำหรับใส่ต่อท้ายสคริปต์หลัก
+-- 📌 เพิ่มหมวดหมู่ "ออโต้เทรด" (Auto-Trade)
 -- ==========================================
-
--- 1. สร้างปุ่มหมวดหมู่ฝั่งซ้าย (Sidebar)
 local AutoTradeBtn = Instance.new("TextButton")
 AutoTradeBtn.Name = "AutoTradeBtn"
-AutoTradeBtn.Parent = SidebarFrame -- เชื่อมกับแถบ Sidebar เดิมของคุณ
+AutoTradeBtn.Parent = SidebarFrame
 AutoTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 AutoTradeBtn.Size = UDim2.new(1, 0, 0, 35)
 AutoTradeBtn.Font = Enum.Font.GothamSemibold
-AutoTradeBtn.Text = "🔄 ออโต้เทรด"
+AutoTradeBtn.Text = "🐔 ออโต้ ไก่"
 AutoTradeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 AutoTradeBtn.TextSize = 13
 
@@ -172,18 +167,18 @@ local AutoTradeCorner = Instance.new("UICorner")
 AutoTradeCorner.CornerRadius = UDim.new(0, 6)
 AutoTradeCorner.Parent = AutoTradeBtn
 
--- 2. ฟังก์ชันเมื่อกดเลือกหมวดหมู่ "ออโต้เทรด"
+-- ฟังก์ชันเมื่อกดเลือกหมวดหมู่นี้
 AutoTradeBtn.MouseButton1Click:Connect(function()
-    -- เคลียร์เนื้อหาเก่าในหน้าต่างฝั่งขวาทิ้งก่อน
+    -- เคลียร์ของเก่าในหน้าจอแสดงผลฝั่งขวาทิ้งก่อน
     for _, child in ipairs(ContentContainer:GetChildren()) do
         if child:IsA("GuiObject") and child ~= ContentLayout then
             child:Destroy()
         end
     end
     
-    -- สร้างหัวข้อหน้าต่าง
+    -- หัวข้อในหน้าออโต้เทรด
     local TradeLabel = Instance.new("TextLabel")
-    TradeLabel.Parent = ContentContainer -- เชื่อมกับพื้นที่แสดงผลฝั่งขวาเดิมของคุณ
+    TradeLabel.Parent = ContentContainer
     TradeLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     TradeLabel.Size = UDim2.new(1, -10, 0, 40)
     TradeLabel.Font = Enum.Font.GothamBold
@@ -195,7 +190,7 @@ AutoTradeBtn.MouseButton1Click:Connect(function()
     LabelCorner.CornerRadius = UDim.new(0, 6)
     LabelCorner.Parent = TradeLabel
 
-    -- สร้างปุ่มเปิด/ปิด ระบบออโต้เทรด
+    -- ปุ่มเปิด/ปิด ออโต้เทรด
     local ToggleTradeBtn = Instance.new("TextButton")
     ToggleTradeBtn.Parent = ContentContainer
     ToggleTradeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
@@ -215,13 +210,11 @@ AutoTradeBtn.MouseButton1Click:Connect(function()
         if isTrading then
             ToggleTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
             ToggleTradeBtn.Text = "สถานะ: เปิด (ON)"
-            -- [ใส่โค้ดการทำงาน Auto-Trade ของคุณตรงนี้ได้เลย]
+            -- ใส่โค้ดทำงาน Auto-Trade ตรงนี้
         else
             ToggleTradeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
             ToggleTradeBtn.Text = "สถานะ: ปิด (OFF)"
-            -- [ใส่โค้ดหยุดการทำงาน Auto-Trade ของคุณตรงนี้]
+            -- ใส่โค้ดหยุดทำงาน Auto-Trade ตรงนี้
         end
     end)
 end)
-
-
