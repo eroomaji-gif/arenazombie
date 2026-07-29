@@ -200,15 +200,13 @@ end)
 
 
 -- ==========================================
--- ⚡ ฟังก์ชันควบคุมการทำงาน (ผูกกับปุ่มเปิด/ปิด)
+-- ⚡ ปุ่มเดียวจบ: ออโต้หยิบปืน + ยิงอัตโนมัติ
 -- ==========================================
 
-_G.AutoShoot = false
-_G.AutoEquipGun = false
-_G.AutoSkipWave = false
+_G.AutoCombat = false
 
--- ฟังก์ชันสร้างปุ่ม Toggle สำหรับใส่ใน AutoRatePage
-local function createToggleButton(parentPage, text, callback)
+-- สร้างปุ่มเปิด/ปิดเพียงปุ่มเดียว
+local function createCombatButton(parentPage, text)
     local btn = Instance.new("TextButton")
     btn.Parent = parentPage
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -222,43 +220,32 @@ local function createToggleButton(parentPage, text, callback)
     corner.CornerRadius = UDim.new(0, 6)
     corner.Parent = btn
     
-    local state = false
     btn.MouseButton1Click:Connect(function()
-        state = not state
-        if state then
+        _G.AutoCombat = not _G.AutoCombat
+        if _G.AutoCombat then
             btn.Text = text .. " [ ON ]"
             btn.TextColor3 = Color3.fromRGB(100, 255, 100)
         else
             btn.Text = text .. " [ OFF ]"
             btn.TextColor3 = Color3.fromRGB(255, 100, 100)
         end
-        callback(state)
     end)
 end
 
--- สร้างปุ่มควบคุมทั้ง 3 ฟังก์ชัน
-createToggleButton(AutoRatePage, "🔄 บังคับถือปืนอัตโนมัติ", function(state)
-    _G.AutoEquipGun = state
-end)
+-- สร้างปุ่มลงในหน้า AutoRatePage ของคุณ
+createCombatButton(AutoRatePage, "🔥 ออโต้หยิบปืนและยิง")
 
-createToggleButton(AutoRatePage, "🔥 ยิงอัตโนมัติ", function(state)
-    _G.AutoShoot = state
-end)
-
-createToggleButton(AutoRatePage, "⏭️ ข้ามคลื่นอัตโนมัติ", function(state)
-    _G.AutoSkipWave = state
-end)
-
--- ลูปการทำงาน (ทำงานเฉพาะตอนเปิดปุ่ม ON เท่านั้น)
+-- ==========================================
+-- ⚙️ ลูปการทำงาน (เมื่อกด ON จะทำทั้งหยิบและยิงพร้อมกัน)
+-- ==========================================
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
--- 1. ลูปเช็คถือปืน
 task.spawn(function()
     while true do
-        task.wait(0.5)
-        if _G.AutoEquipGun then
+        task.wait(0.1)
+        if _G.AutoCombat then
             pcall(function()
                 local char = localPlayer.Character
                 local humanoid = char and char:FindFirstChildOfClass("Humanoid")
@@ -266,6 +253,8 @@ task.spawn(function()
                 
                 if char and humanoid and humanoid.Health > 0 then
                     local currentTool = char:FindFirstChildOfClass("Tool")
+                    
+                    -- 1. เช็คว่าถ้าไม่ได้ถือปืนอยู่ ให้หยิบขึ้นมาถือทันที
                     if not currentTool and backpack then
                         for _, item in ipairs(backpack:GetChildren()) do
                             if item:IsA("Tool") then
@@ -274,43 +263,17 @@ task.spawn(function()
                             end
                         end
                     end
+                    
+                    -- 2. ส่งรีโมทยิงอัตโนมัติทันที
+                    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+                    local gunFireEvent = remotes and remotes:FindFirstChild("GunFire")
+                    if gunFireEvent then
+                        local activeTool = char:FindFirstChildOfClass("Tool")
+                        local toolName = activeTool and activeTool.Name or "Minigin"
+                        gunFireEvent:FireServer(toolName)
+                    end
                 end
             end)
         end
     end
 end)
-
--- 2. ลูปยิงอัตโนมัติ
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if _G.AutoShoot then
-            pcall(function()
-                local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                local gunFireEvent = remotes and remotes:FindFirstChild("GunFire")
-                if gunFireEvent then
-                    gunFireEvent:FireServer("Minigin")
-                end
-            end)
-        end
-    end
-end)
-
--- 3. ลูปข้ามคลื่นอัตโนมัติ
-task.spawn(function()
-    while true do
-        task.wait(1)
-        if _G.AutoSkipWave then
-            pcall(function()
-                local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                local skipEvent = remotes and remotes:FindFirstChild("SkipVote")
-                if skipEvent then
-                    skipEvent:FireServer(true)
-                end
-            end)
-        end
-    end
-end)
-
-
-
