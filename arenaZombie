@@ -150,7 +150,10 @@ ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 10)
 
--- ปุ่มหมวดหมู่ "ออโตเรด" (สำหรับใส่ใน SidebarFrame)
+
+
+
+-- 1. สร้างปุ่มหมวดหมู่
 local AutoRateBtn = Instance.new("TextButton")
 AutoRateBtn.Name = "AutoRateBtn"
 AutoRateBtn.Parent = SidebarFrame
@@ -164,3 +167,28 @@ AutoRateBtn.TextSize = 13
 local AutoRateCorner = Instance.new("UICorner")
 AutoRateCorner.CornerRadius = UDim.new(0, 6)
 AutoRateCorner.Parent = AutoRateBtn
+
+-- 2. สร้างหน้าต่างเนื้อหาของหมวดนี้
+local AutoRatePage = Instance.new("ScrollingFrame")
+AutoRatePage.Name = "AutoRatePage"
+AutoRatePage.Parent = ContentContainer
+AutoRatePage.BackgroundTransparency = 1
+AutoRatePage.Size = UDim2.new(1, 0, 1, 0)
+AutoRatePage.CanvasSize = UDim2.new(0, 0, 0, 300)
+AutoRatePage.ScrollBarThickness = 4
+AutoRatePage.Visible = true -- ตั้งเป็น true ให้โชว์เป็นหน้าแรกทันทีที่เปิดเมนู!
+
+local PageLayout = Instance.new("UIListLayout")
+PageLayout.Parent = AutoRatePage
+PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+PageLayout.Padding = UDim.new(0, 10)
+
+-- 3. คำสั่งให้กดสลับหน้า
+AutoRateBtn.MouseButton1Click:Connect(function()
+    for _, child in ipairs(ContentContainer:GetChildren()) do
+        if child:IsA("ScrollingFrame") then
+            child.Visible = false
+        end
+    end
+    AutoRatePage.Visible = true
+end)
