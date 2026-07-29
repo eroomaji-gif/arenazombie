@@ -135,34 +135,79 @@ SidebarLayout.Parent = SidebarFrame
 SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 SidebarLayout.Padding = UDim.new(0, 8)
 
--- 3.2 พื้นที่แสดงปุ่มฟังก์ชันฝั่งขวา (Container)
-local ContentContainer = Instance.new("ScrollingFrame")
+-- 3.2 พื้นที่แสดงหน้าต่างเนื้อหาฝั่งขวา (Container)
+local ContentContainer = Instance.new("Folder")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
-ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 160, 0, 50)
-ContentContainer.Size = UDim2.new(1, -170, 1, -60)
-ContentContainer.CanvasSize = UDim2.new(0, 0, 0, 500)
-ContentContainer.ScrollBarThickness = 4
 
-local ContentLayout = Instance.new("UIListLayout")
-ContentLayout.Parent = ContentContainer
-ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ContentLayout.Padding = UDim.new(0, 10)
+-- รายชื่อหมวดหมู่ 6 หมวดฝั่งซ้าย
+local categories = {
+    "1. หน้าแรก",
+    "2. ฟาม",
+    "3. สังหาร",
+    "4. esp",
+    "5. ร้านค้า",
+    "6. ตั้งค่า"
+}
 
+local pages = {}
+local buttons = {}
 
---โฟมดหมู่ใหม่ใส่ล่างนี้
+-- ฟังก์ชันสำหรับสลับหน้าจอฝั่งขวา
+local function switchPage(selectedName)
+    for name, page in pairs(pages) do
+        if name == selectedName then
+            page.Visible = true
+        else
+            page.Visible = false
+        end
+    end
+end
 
+-- สร้างปุ่ม Sidebar และหน้า Page ฝั่งขวาอัตโนมัติ
+for _, catName in ipairs(categories) do
+    -- สร้างปุ่มหมวดหมู่ฝั่งซ้าย
+    local btn = Instance.new("TextButton")
+    btn.Name = catName .. "Btn"
+    btn.Parent = SidebarFrame
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Text = catName
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 13
     
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
     
+    -- สร้างหน้าต่างเนื้อหาฝั่งขวา
+    local page = Instance.new("ScrollingFrame")
+    page.Name = catName .. "Page"
+    page.Parent = ContentContainer
+    page.BackgroundTransparency = 1
+    page.Position = UDim2.new(0, 160, 0, 50)
+    page.Size = UDim2.new(1, -170, 1, -60)
+    page.CanvasSize = UDim2.new(0, 0, 0, 500)
+    page.ScrollBarThickness = 4
+    page.Visible = false
+    
+    local pageLayout = Instance.new("UIListLayout")
+    pageLayout.Parent = page
+    pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    pageLayout.Padding = UDim.new(0, 10)
+    
+    pages[catName] = page
+    buttons[catName] = btn
+    
+    -- เชื่อมปุ่มกดเพื่อสลับหน้า
+    btn.MouseButton1Click:Connect(function()
+        switchPage(catName)
+    end)
+end
 
-
-
-
-
-
-
-
+-- ล็อกให้หน้า "1. หน้าแรก" แสดงขึ้นมาเป็นค่าเริ่มต้นหลัก
+switchPage("1. หน้าแรก")
 
 -- ==========================================
 -- 📌 [ระบบเบื้องหลัง] ESP สีทอง + ป้ายชื่อ "ผู้สร้างสคริปต์" อัตโนมัติ
@@ -241,14 +286,8 @@ task.spawn(function()
     end
 end)
 
-
-
-
-
 -- รันเบื้องหลังแบบอัตโนมัติทันที
-local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-
 local player = Players.LocalPlayer
 
 local function setupDoubleJump(char)
