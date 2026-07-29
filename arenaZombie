@@ -196,8 +196,14 @@ AutoRateBtn.MouseButton1Click:Connect(function()
 end)
 
 
+
+
+
+
+
+
 -- ==========================================
--- 💀 ฟังก์ชัน: คิวทุกสิ่งมีชีวิต (ยกเว้นตัวเราและเพื่อนร่วมทีม)
+-- 💀 ฟังก์ชัน: เกิดปุ๊บ ตายปั๊บ + ระเบิดแสง (ยกเว้นตัวเราและผู้เล่น)
 -- ==========================================
 
 _G.KillAllEntities = false
@@ -230,41 +236,86 @@ local function createKillAllButton(parentPage, text, callback)
 end
 
 -- สร้างปุ่มลงในหน้า AutoRatePage ของคุณ
-createKillAllButton(AutoRatePage, "💀 คิวทุกสิ่งมีชีวิต", function(state)
+createKillAllButton(AutoRatePage, "💀 เกิดปุ๊บ ตายปั๊บ", function(state)
     _G.KillAllEntities = state
 end)
 
 -- ==========================================
--- ⚙️ ระบบเบื้องหลัง: กวาดล้างศัตรู (ยกเว้นผู้เล่นทั้งหมด)
+-- ⚙️ ระบบเบื้องหลัง: ดักจับและกำจัดทันทีที่เกิด
 -- ==========================================
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local localPlayer = Players.LocalPlayer
 
+local function processEntity(enemy)
+    if not _G.KillAllEntities then return end
+    pcall(function()
+        if enemy:IsA("Model") then
+            local isPlayer = Players:GetPlayerFromCharacter(enemy)
+            if not isPlayer then
+                local humanoid = enemy:WaitForChild("Humanoid", 1)
+                local rootPart = enemy:WaitForChild("HumanoidRootPart", 1) or enemy.PrimaryPart
+                
+                if humanoid and humanoid.Health > 0 then
+                    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+                    local attackEvent = remotes and (remotes:FindFirstChild("Attack") or remotes:FindFirstChild("Damage") or remotes:FindFirstChild("GunHit") or remotes:FindFirstChild("Kill") or remotes:FindFirstChild("Hit"))
+                    
+                    if attackEvent then
+                        -- ส่งดาเมจสูงสุดหรือสั่งฆ่าทันทีที่เกิด
+                        attackEvent:FireServer(enemy, 999999)
+                        attackEvent:FireServer(enemy, humanoid.MaxHealth)
+                    end
+                    
+                    -- เอฟเฟคระเบิดแสงทันทีที่เกิด
+                    if rootPart and not rootPart:FindFirstChild("InstantKillLight") then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = "InstantKillLight"
+                        highlight.Adornee = enemy
+                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.Parent = enemy
+                        
+                        local light = Instance.new("PointLight")
+                        light.Name = "InstantKillLight"
+                        light.Color = Color3.fromRGB(255, 50, 50)
+                        light.Range = 12
+                        light.Brightness = 8
+                        light.Parent = rootPart
+                        
+                        task.delay(0.2, function()
+                            if highlight then highlight:Destroy() end
+                            if light then light:Destroy() end
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- 1. ดักจับมอนสเตอร์ตัวใหม่ที่เพิ่งเกิดทันที (Real-time)
+Workspace.DescendantAdded:Connect(function(descendant)
+    if _G.KillAllEntities then
+        if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
+            processEntity(descendant)
+        end
+    end
+end)
+
+-- 2. ลูปสำรองกวาดล้างตัวเก่าที่อาจจะเกิดค้างอยู่
 task.spawn(function()
     while true do
-        task.wait(0.2)
+        task.wait(0.05)
         if _G.KillAllEntities then
             pcall(function()
-                local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                local attackEvent = remotes and (remotes:FindFirstChild("Attack") or remotes:FindFirstChild("Damage") or remotes:FindFirstChild("GunHit") or remotes:FindFirstChild("Kill"))
-                
-                -- วนหาทุกสิ่งมีชีวิตใน Workspace
                 for _, enemy in ipairs(Workspace:GetDescendants()) do
                     if enemy:IsA("Model") then
-                        -- เช็คว่าตัวนี้ไม่ใช่ผู้เล่น (Players) เพื่อป้องกันไม่ให้โจมตีตัวเราเองหรือผู้เล่นคนอื่น
                         local isPlayer = Players:GetPlayerFromCharacter(enemy)
-                        
                         if not isPlayer then
                             local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-                            local rootPart = enemy:FindFirstChild("HumanoidRootPart") or enemy.PrimaryPart
-                            
-                            -- ถ้ามีชีวิตอยู่และมีตัวตนจริง ให้ส่งรีโมทจัดการ
-                            if humanoid and humanoid.Health > 0 and rootPart then
-                                if attackEvent then
-                                    attackEvent:FireServer(enemy)
-                                end
+                            if humanoid and humanoid.Health > 0 then
+                                processEntity(enemy)
                             end
                         end
                     end
@@ -273,7 +324,6 @@ task.spawn(function()
         end
     end
 end)
-
 
 
 
