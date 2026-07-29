@@ -200,12 +200,11 @@ end)
 
 
 -- ==========================================
--- ⚡ ปุ่มเดียวจบ: ออโต้หยิบปืน + ยิงอัตโนมัติ
+-- ⚡ ปุ่มเดียวจบ: หยิบปืน + กดปุ่ม "อัตโนมัติ" ในเกมให้เอง
 -- ==========================================
 
 _G.AutoCombat = false
 
--- สร้างปุ่มเปิด/ปิดเพียงปุ่มเดียว
 local function createCombatButton(parentPage, text)
     local btn = Instance.new("TextButton")
     btn.Parent = parentPage
@@ -232,29 +231,27 @@ local function createCombatButton(parentPage, text)
     end)
 end
 
--- สร้างปุ่มลงในหน้า AutoRatePage ของคุณ
-createCombatButton(AutoRatePage, "🔥 ออโต้หยิบปืนและยิง")
+createCombatButton(AutoRatePage, "🔥 ออโต้หยิบปืนและเปิดโหมดออโต้")
 
 -- ==========================================
--- ⚙️ ลูปการทำงาน (เมื่อกด ON จะทำทั้งหยิบและยิงพร้อมกัน)
+-- ⚙️ ระบบเบื้องหลัง: หยิบปืน + จำลองการกดปุ่ม "อัตโนมัติ" ในเกม
 -- ==========================================
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.5)
         if _G.AutoCombat then
             pcall(function()
                 local char = localPlayer.Character
                 local humanoid = char and char:FindFirstChildOfClass("Humanoid")
                 local backpack = localPlayer:FindFirstChildOfClass("Backpack")
                 
+                -- 1. หยิบปืนอัตโนมัติถ้ายังไม่ถือ
                 if char and humanoid and humanoid.Health > 0 then
                     local currentTool = char:FindFirstChildOfClass("Tool")
-                    
-                    -- 1. เช็คว่าถ้าไม่ได้ถือปืนอยู่ ให้หยิบขึ้นมาถือทันที
                     if not currentTool and backpack then
                         for _, item in ipairs(backpack:GetChildren()) do
                             if item:IsA("Tool") then
@@ -263,14 +260,17 @@ task.spawn(function()
                             end
                         end
                     end
-                    
-                    -- 2. ส่งรีโมทยิงอัตโนมัติทันที
-                    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-                    local gunFireEvent = remotes and remotes:FindFirstChild("GunFire")
-                    if gunFireEvent then
-                        local activeTool = char:FindFirstChildOfClass("Tool")
-                        local toolName = activeTool and activeTool.Name or "Minigin"
-                        gunFireEvent:FireServer(toolName)
+                end
+                
+                -- 2. ค้นหาและกดปุ่ม "อัตโนมัติ" ใน PlayerGui ของเกมให้อัตโนมัติ
+                for _, gui in ipairs(playerGui:GetDescendants()) do
+                    if (gui:IsA("TextButton") or gui:IsA("ImageButton")) then
+                        if gui.Text == "อัตโนมัติ" or gui.Name:lower():find("auto") then
+                            -- จำลองการคลิกปุ่มในเกม
+                            for _, connection in ipairs(getconnections(gui.MouseButton1Click)) do
+                                connection:Fire()
+                            end
+                        end
                     end
                 end
             end)
