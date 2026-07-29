@@ -345,3 +345,86 @@ task.spawn(function()
     end
 end)
 
+
+
+
+
+
+
+-- ==========================================
+-- 📌 ระบบ ESP มอนสเตอร์ (กรอบแดง + ไฮไลต์แดงอ่อน)
+-- ==========================================
+local espPage = pages["4. esp"]
+
+_G.EnableMobESP = false
+
+local mobEspToggleBtn = Instance.new("TextButton")
+mobEspToggleBtn.Parent = espPage
+mobEspToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+mobEspToggleBtn.Size = UDim2.new(1, 0, 0, 40)
+mobEspToggleBtn.Font = Enum.Font.GothamSemibold
+mobEspToggleBtn.Text = "🔴 ESP มอนสเตอร์ [ OFF ]"
+mobEspToggleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+mobEspToggleBtn.TextSize = 13
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = mobEspToggleBtn
+
+mobEspToggleBtn.MouseButton1Click:Connect(function()
+    _G.EnableMobESP = not _G.EnableMobESP
+    if _G.EnableMobESP then
+        mobEspToggleBtn.Text = "🔴 ESP มอนสเตอร์ [ ON ]"
+        mobEspToggleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        mobEspToggleBtn.Text = "🔴 ESP มอนสเตอร์ [ OFF ]"
+        mobEspToggleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        -- ลบ ESP มอนสเตอร์ทั้งหมดทิ้งเมื่อปิด
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
+                local hl = obj:FindFirstChild("MobESPHighlight")
+                if hl then hl:Destroy() end
+            end
+        end
+    end
+end)
+
+-- ลูปทำงานเบื้องหลังเพื่อตรวจจับและใส่ ESP ให้กับมอนสเตอร์
+task.spawn(function()
+    while true do
+        task.wait(1)
+        pcall(function()
+            if _G.EnableMobESP then
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    -- เช็คว่าเป็น Model ที่มีหลอดเลือด (Humanoid) และไม่ใช่ตัวผู้เล่น
+                    if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+                        -- เช็คว่าไม่ใช่ตัวผู้เล่นในเซิร์ฟเวอร์
+                        local isPlayer = false
+                        for _, p in ipairs(Players:GetPlayers()) do
+                            if p.Character == obj then
+                                isPlayer = true
+                                break
+                            end
+                        end
+                        
+                        -- ถ้าไม่ใช่ผู้เล่น (แปลว่าเป็นมอนสเตอร์/NPC) ให้ใส่ ESP กรอบแดง
+                        if not isPlayer then
+                            local highlight = obj:FindFirstChild("MobESPHighlight")
+                            if not highlight then
+                                highlight = Instance.new("Highlight")
+                                highlight.Name = "MobESPHighlight"
+                                highlight.Adornee = obj
+                                highlight.Parent = obj
+                            end
+                            highlight.FillColor = Color3.fromRGB(255, 100, 100)     -- สีแดงอ่อนข้างใน
+                            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)       -- ขอบกรอบสีแดงสด
+                            highlight.FillTransparency = 0.6                        -- ความโปร่งใสข้างใน
+                            highlight.OutlineTransparency = 0                      -- ความชัดของขอบ
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
