@@ -196,19 +196,13 @@ AutoRateBtn.MouseButton1Click:Connect(function()
 end)
 
 
-
-
-
-
-
-
 -- ==========================================
--- ⚡ ปุ่มเดียวจบ: หยิบปืน + จำลองการกดปุ่ม "อัตโนมัติ" ในเกม (แบบใหม่)
+-- 💀 ฟังก์ชัน: คิวทุกสิ่งมีชีวิต (ยกเว้นตัวเราและเพื่อนร่วมทีม)
 -- ==========================================
 
-_G.AutoCombat = false
+_G.KillAllEntities = false
 
-local function createCombatButton(parentPage, text)
+local function createKillAllButton(parentPage, text, callback)
     local btn = Instance.new("TextButton")
     btn.Parent = parentPage
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -223,63 +217,55 @@ local function createCombatButton(parentPage, text)
     corner.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
-        _G.AutoCombat = not _G.AutoCombat
-        if _G.AutoCombat then
+        _G.KillAllEntities = not _G.KillAllEntities
+        if _G.KillAllEntities then
             btn.Text = text .. " [ ON ]"
             btn.TextColor3 = Color3.fromRGB(100, 255, 100)
         else
             btn.Text = text .. " [ OFF ]"
             btn.TextColor3 = Color3.fromRGB(255, 100, 100)
         end
+        callback(_G.KillAllEntities)
     end)
 end
 
-createCombatButton(AutoRatePage, "🔥 ออโต้หยิบปืนและเปิดโหมดออโต้")
+-- สร้างปุ่มลงในหน้า AutoRatePage ของคุณ
+createKillAllButton(AutoRatePage, "💀 คิวทุกสิ่งมีชีวิต", function(state)
+    _G.KillAllEntities = state
+end)
 
 -- ==========================================
--- ⚙️ ระบบเบื้องหลัง: หยิบปืน + กดปุ่มอัตโนมัติ
+-- ⚙️ ระบบเบื้องหลัง: กวาดล้างศัตรู (ยกเว้นผู้เล่นทั้งหมด)
 -- ==========================================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 local localPlayer = Players.LocalPlayer
-local playerGui = localPlayer:WaitForChild("PlayerGui")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 task.spawn(function()
     while true do
-        task.wait(0.5)
-        if _G.AutoCombat then
+        task.wait(0.2)
+        if _G.KillAllEntities then
             pcall(function()
-                local char = localPlayer.Character
-                local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-                local backpack = localPlayer:FindFirstChildOfClass("Backpack")
+                local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+                local attackEvent = remotes and (remotes:FindFirstChild("Attack") or remotes:FindFirstChild("Damage") or remotes:FindFirstChild("GunHit") or remotes:FindFirstChild("Kill"))
                 
-                -- 1. หยิบปืนอัตโนมัติถ้ายังไม่ถือ
-                if char and humanoid and humanoid.Health > 0 then
-                    local currentTool = char:FindFirstChildOfClass("Tool")
-                    if not currentTool and backpack then
-                        for _, item in ipairs(backpack:GetChildren()) do
-                            if item:IsA("Tool") then
-                                humanoid:EquipTool(item)
-                                break
-                            end
-                        end
-                    end
-                end
-                
-                -- 2. ค้นหาปุ่ม "อัตโนมัติ" ในจอแล้วสั่งกดคลิกซ้ายจำลอง
-                for _, gui in ipairs(playerGui:GetDescendants()) do
-                    if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                        if gui.Text == "อัตโนมัติ" or gui.Name:lower():find("auto") then
-                            -- คำนวณตำแหน่งกึ่งกลางของปุ่มบนหน้าจอ
-                            local absPos = gui.AbsolutePosition
-                            local absSize = gui.AbsoluteSize
-                            local clickX = absPos.X + (absSize.X / 2)
-                            local clickY = absPos.Y + (absSize.Y / 2)
+                -- วนหาทุกสิ่งมีชีวิตใน Workspace
+                for _, enemy in ipairs(Workspace:GetDescendants()) do
+                    if enemy:IsA("Model") then
+                        -- เช็คว่าตัวนี้ไม่ใช่ผู้เล่น (Players) เพื่อป้องกันไม่ให้โจมตีตัวเราเองหรือผู้เล่นคนอื่น
+                        local isPlayer = Players:GetPlayerFromCharacter(enemy)
+                        
+                        if not isPlayer then
+                            local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                            local rootPart = enemy:FindFirstChild("HumanoidRootPart") or enemy.PrimaryPart
                             
-                            -- จำลองการกดคลิกเมาส์จริงลงบนปุ่ม
-                            VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
-                            task.wait(0.05)
-                            VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
+                            -- ถ้ามีชีวิตอยู่และมีตัวตนจริง ให้ส่งรีโมทจัดการ
+                            if humanoid and humanoid.Health > 0 and rootPart then
+                                if attackEvent then
+                                    attackEvent:FireServer(enemy)
+                                end
+                            end
                         end
                     end
                 end
@@ -287,6 +273,8 @@ task.spawn(function()
         end
     end
 end)
+
+
 
 
 
