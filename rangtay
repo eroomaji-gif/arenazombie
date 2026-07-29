@@ -800,7 +800,63 @@ lockHeadBtn.MouseButton1Down:Connect(function()
         lockHeadBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- สีเขียวเมื่อเปิด
         lockHeadBtn.Text = "ล็อกหัวมอน: ON"
     else
+
+
+
+
+
         lockHeadBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดงเมื่อปิด
         lockHeadBtn.Text = "🎯 ล็อกหัวมอน: OFF"
     end
 end)
+
+
+
+
+
+
+
+-- ==========================================
+-- 📌 [ระบบเบื้องหลัง] ลบหมอกและเคลียร์บรรยากาศรอบตัว
+-- ==========================================
+local Lighting = game:GetService("Lighting")
+
+local function clearFogAndAtmosphere()
+    pcall(function()
+        -- 1. ปิดหรือลบค่าหมอกหลักของ Lighting
+        Lighting.FogEnd = 100000 -- ขยายระยะหมอกให้ออกไปไกลสุดขีด
+        Lighting.FogStart = 0
+        
+        -- 2. ค้นหาและปิด/ลบเอฟเฟกต์หมอก (Atmosphere) หรือเอฟเฟกต์ปรับสีที่ทำให้มืด
+        for _, obj in ipairs(Lighting:GetChildren()) do
+            if obj:IsA("Atmosphere") then
+                -- ลดค่าความหนาแน่นของหมอกให้เป็น 0
+                obj.Density = 0
+                obj.Haze = 0
+                obj.Glare = 0
+            elseif obj:IsA("Fog") or obj:IsA("BlurEffect") then
+                obj.Enabled = false
+            end
+        end
+        
+        -- 3. เคลียร์หมอกที่อาจจะแอบอยู่ใน Workspace (บางเกมสร้างพาร์ทหมอกไว้)
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Atmosphere") then
+                obj.Density = 0
+            end
+        end
+    end)
+end
+
+-- รันทำงานทันที
+clearFogAndAtmosphere()
+
+-- ใส่ลูปคอยบล็อกไม่ให้เกมแอบเติมหมอกกลับมา
+task.spawn(function()
+    while true do
+        task.wait(2)
+        clearFogAndAtmosphere()
+    end
+end)
+
+print("🌫️ ระบบลบหมอกและเคลียร์บรรยากาศทำงานเรียบร้อยแล้ว!")
