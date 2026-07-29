@@ -140,7 +140,7 @@ local ContentContainer = Instance.new("Folder")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
 
--- รายชื่อหมวดหมู่ 6 หมวดฝั่งซ้าย
+-- รายชื่อ 6 หมวดหมู่ฝั่งซ้าย
 local categories = {
     "1. หน้าแรก",
     "2. ฟาม",
@@ -166,7 +166,7 @@ end
 
 -- สร้างปุ่ม Sidebar และหน้า Page ฝั่งขวาอัตโนมัติ
 for _, catName in ipairs(categories) do
-    -- สร้างปุ่มหมวดหมู่ฝั่งซ้าย
+    -- สร้างปุ่มฝั่งซ้าย
     local btn = Instance.new("TextButton")
     btn.Name = catName .. "Btn"
     btn.Parent = SidebarFrame
@@ -181,7 +181,7 @@ for _, catName in ipairs(categories) do
     btnCorner.CornerRadius = UDim.new(0, 6)
     btnCorner.Parent = btn
     
-    -- สร้างหน้าต่างเนื้อหาฝั่งขวา
+    -- สร้างหน้าต่างเนื้อหาฝั่งขวา (ScrollingFrame)
     local page = Instance.new("ScrollingFrame")
     page.Name = catName .. "Page"
     page.Parent = ContentContainer
@@ -200,40 +200,34 @@ for _, catName in ipairs(categories) do
     pages[catName] = page
     buttons[catName] = btn
     
-    -- เชื่อมปุ่มกดเพื่อสลับหน้า
+    -- กดปุ่มเพื่อเปลี่ยนหน้า
     btn.MouseButton1Click:Connect(function()
         switchPage(catName)
     end)
 end
 
--- ล็อกให้หน้า "1. หน้าแรก" แสดงขึ้นมาเป็นค่าเริ่มต้นหลัก
+-- ล็อกให้หน้า "1. หน้าแรก" แสดงขึ้นมาเป็นหลักอันแรกทันที
 switchPage("1. หน้าแรก")
 
 -- ==========================================
 -- 📌 [ระบบเบื้องหลัง] ESP สีทอง + ป้ายชื่อ "ผู้สร้างสคริปต์" อัตโนมัติ
 -- ==========================================
 task.spawn(function()
-    -- รายชื่อ Owner (ใส่ชื่อในเกม หรือ UserId ของคุณลงไปตรงนี้)
     local scriptOwners = {
-        ["ชื่อในเกมของคุณ1"] = true,
-        ["ชื่อในเกมของคุณ2"] = true,
-        -- หรือใส่ UserID แบบตัวเลขก็ได้
-        [123456789] = true,
+        ["Onsenb47162"] = true,
+        ["Agakami_5625"] = true,
     }
 
-    -- ฟังก์ชันเช็คว่าเป็น Owner หรือไม่ (อิงจากระบบ isOwner ที่มีอยู่แล้วในสคริปต์คุณได้เลย)
     local function checkIfOwner(plr)
         if scriptOwners[plr.Name] or scriptOwners[plr.UserId] then
             return true
         end
-        -- ถ้าในสคริปต์หลักของคุณมีฟังก์ชัน isOwner อยู่แล้ว สามารถเรียกใช้แทนได้เลย:
         if type(isOwner) == "function" and isOwner(plr) then
             return true
         end
         return false
     end
 
-    -- ลูปทำงานเบื้องหลังตลอดเวลา
     while true do
         task.wait(1)
         pcall(function()
@@ -241,23 +235,19 @@ task.spawn(function()
                 if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                     local char = plr.Character
                     
-                    -- เช็คว่าเป็น Owner หรือไม่
                     if checkIfOwner(plr) then
-                        
-                        -- 1. สร้าง Highlight สีทองอร่ามรอบตัวละคร
                         local highlight = char:FindFirstChild("OwnerGoldHighlight")
                         if not highlight then
                             highlight = Instance.new("Highlight")
                             highlight.Name = "OwnerGoldHighlight"
                             highlight.Adornee = char
                             highlight.Parent = char
-                            highlight.FillColor = Color3.fromRGB(255, 215, 0) -- สีทอง
-                            highlight.OutlineColor = Color3.fromRGB(255, 255, 0) -- ขอบสีทองสว่าง
+                            highlight.FillColor = Color3.fromRGB(255, 215, 0)
+                            highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
                             highlight.FillTransparency = 0.4
                             highlight.OutlineTransparency = 0
                         end
                         
-                        -- 2. สร้างป้ายชื่อขึ้นบนหัว
                         local head = char:FindFirstChild("Head")
                         if head and not head:FindFirstChild("OwnerTagGui") then
                             local bill = Instance.new("BillboardGui")
@@ -275,10 +265,9 @@ task.spawn(function()
                             textLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
                             textLabel.TextScaled = true
                             textLabel.Font = Enum.Font.GothamBold
-                            textLabel.TextStrokeTransparency = 0 -- ขอบดำให้ตัวหนังสือคมชัด
+                            textLabel.TextStrokeTransparency = 0
                             textLabel.Parent = bill
                         end
-                        
                     end
                 end
             end
@@ -286,9 +275,10 @@ task.spawn(function()
     end
 end)
 
--- รันเบื้องหลังแบบอัตโนมัติทันที
+-- ==========================================
+-- 📌 [ระบบเบื้องหลัง] Double Jump (กระโดดกลางอากาศ)
+-- ==========================================
 local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
 
 local function setupDoubleJump(char)
     local humanoid = char:WaitForChild("Humanoid")
@@ -305,7 +295,7 @@ local function setupDoubleJump(char)
         airPart.Position = rootPart.Position - Vector3.new(0, 3.5, 0)
         airPart.Anchored = true
         airPart.CanCollide = true
-        airPart.Transparency = 1 -- ล่องหนมองไม่เห็น
+        airPart.Transparency = 1
         airPart.Parent = workspace
         
         task.delay(0.3, function()
@@ -316,7 +306,6 @@ local function setupDoubleJump(char)
         end)
     end
 
-    -- ดักจับจังหวะการกระโดดกลางอากาศเงียบๆ
     humanoid.StateChanged:Connect(function(oldState, newState)
         if newState == Enum.HumanoidStateType.Jumping then
             hasDoubleJumped = false
@@ -343,8 +332,7 @@ local function setupDoubleJump(char)
     end)
 end
 
--- รองรับกรณีตัวละครตายแล้วเกิดใหม่ (รีเซ็ตระบบให้อัตโนมัติ)
-if player.Character then
-    setupDoubleJump(player.Character)
+if localPlayer.Character then
+    setupDoubleJump(localPlayer.Character)
 end
-player.CharacterAdded:Connect(setupDoubleJump)
+localPlayer.CharacterAdded:Connect(setupDoubleJump)
