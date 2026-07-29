@@ -428,3 +428,98 @@ task.spawn(function()
         end)
     end
 end)
+
+
+
+
+-- ==========================================
+-- 📌 [ESP ผู้เล่น / ตาเทพเจ้า] สำหรับใส่ใน espPage
+-- ==========================================
+local espPage = pages["4. esp"]
+
+getgenv().Script2_Active = false
+
+local Btn2 = Instance.new("TextButton")
+Btn2.Name = "ScriptButton2"
+Btn2.Parent = espPage -- 📌 เปลี่ยน Parent มาไว้ที่หน้า ESP โดยตรง
+Btn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดง (ปิดอยู่)
+Btn2.Size = UDim2.new(1, 0, 0, 40)
+Btn2.Font = Enum.Font.GothamBold
+Btn2.Text = "👁️ ตาเทพเจ้า: OFF"
+Btn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn2.TextSize = 13
+
+local Corner2 = Instance.new("UICorner")
+Corner2.CornerRadius = UDim.new(0, 6)
+Corner2.Parent = Btn2
+
+-- ฟังก์ชันเช็คสี ESP ตามสถานะผู้เล่น
+local function getESPColor(player)
+    if player.Team and player.Team == localPlayer.Team then
+        return Color3.fromRGB(0, 255, 0) -- สีเขียว (พวกเดียวกัน)
+    end
+    
+    local character = player.Character
+    if character then
+        local backpack = player:FindFirstChild("Backpack")
+        if character:FindFirstChild("Knife") or character:FindFirstChild("Gun") or 
+           (backpack and (backpack:FindFirstChild("Knife") or backpack:FindFirstChild("Gun"))) then
+            return Color3.fromRGB(255, 0, 0) -- สีแดง (อันตราย/มีอาวุธ)
+        end
+    end
+    return Color3.fromRGB(255, 255, 255) -- สีขาว (ทั่วไป)
+end
+
+-- ลูปการทำงาน ESP ผู้เล่น
+task.spawn(function()
+    getgenv().ActiveHighlights = {}
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if not getgenv().Script2_Active then return end
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= localPlayer and not isOwner(player) and player.Character then
+                local character = player.Character
+                if character:FindFirstChild("HumanoidRootPart") then
+                    local highlight = character:FindFirstChild("CustomTeamESP")
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "CustomTeamESP"
+                        highlight.Adornee = character
+                        highlight.OutlineTransparency = 0
+                        highlight.FillTransparency = 0.4
+                        highlight.Parent = character
+                        table.insert(getgenv().ActiveHighlights, highlight)
+                    end
+                    
+                    local targetColor = getESPColor(player)
+                    highlight.FillColor = targetColor
+                    highlight.OutlineColor = targetColor
+                end
+            end
+        end
+    end)
+end)
+
+-- ปุ่มเปิด/ปิดการทำงาน
+Btn2.MouseButton1Click:Connect(function()
+    getgenv().Script2_Active = not getgenv().Script2_Active
+    
+    if getgenv().Script2_Active then
+        Btn2.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- สีเขียวเมื่อเปิด
+        Btn2.Text = "👁️ ตาเทพเจ้า: ON"
+    else
+        Btn2.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดงเมื่อปิด
+        Btn2.Text = "👁️ ตาเทพเจ้า: OFF"
+        
+        -- ล้างค่าแสง ESP ออกเมื่อปิดสคริปต์
+        for _, highlight in pairs(getgenv().ActiveHighlights or {}) do
+            if highlight and highlight.Parent then
+                highlight:Destroy()
+            end
+        end
+        getgenv().ActiveHighlights = {}
+    end
+end)
+
+
+
