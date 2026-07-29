@@ -199,8 +199,11 @@ end)
 
 
 
+
+
+
 -- ==========================================
--- ⚡ ปุ่มเดียวจบ: หยิบปืน + กดปุ่ม "อัตโนมัติ" ในเกมให้เอง
+-- ⚡ ปุ่มเดียวจบ: หยิบปืน + จำลองการกดปุ่ม "อัตโนมัติ" ในเกม (แบบใหม่)
 -- ==========================================
 
 _G.AutoCombat = false
@@ -234,11 +237,12 @@ end
 createCombatButton(AutoRatePage, "🔥 ออโต้หยิบปืนและเปิดโหมดออโต้")
 
 -- ==========================================
--- ⚙️ ระบบเบื้องหลัง: หยิบปืน + จำลองการกดปุ่ม "อัตโนมัติ" ในเกม
+-- ⚙️ ระบบเบื้องหลัง: หยิบปืน + กดปุ่มอัตโนมัติ
 -- ==========================================
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 task.spawn(function()
     while true do
@@ -262,14 +266,20 @@ task.spawn(function()
                     end
                 end
                 
-                -- 2. ค้นหาและกดปุ่ม "อัตโนมัติ" ใน PlayerGui ของเกมให้อัตโนมัติ
+                -- 2. ค้นหาปุ่ม "อัตโนมัติ" ในจอแล้วสั่งกดคลิกซ้ายจำลอง
                 for _, gui in ipairs(playerGui:GetDescendants()) do
-                    if (gui:IsA("TextButton") or gui:IsA("ImageButton")) then
+                    if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
                         if gui.Text == "อัตโนมัติ" or gui.Name:lower():find("auto") then
-                            -- จำลองการคลิกปุ่มในเกม
-                            for _, connection in ipairs(getconnections(gui.MouseButton1Click)) do
-                                connection:Fire()
-                            end
+                            -- คำนวณตำแหน่งกึ่งกลางของปุ่มบนหน้าจอ
+                            local absPos = gui.AbsolutePosition
+                            local absSize = gui.AbsoluteSize
+                            local clickX = absPos.X + (absSize.X / 2)
+                            local clickY = absPos.Y + (absSize.Y / 2)
+                            
+                            -- จำลองการกดคลิกเมาส์จริงลงบนปุ่ม
+                            VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, true, game, 0)
+                            task.wait(0.05)
+                            VirtualInputManager:SendMouseButtonEvent(clickX, clickY, 0, false, game, 0)
                         end
                     end
                 end
@@ -277,3 +287,8 @@ task.spawn(function()
         end
     end
 end)
+
+
+
+
+                        
