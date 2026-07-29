@@ -871,115 +871,6 @@ print("🌫️ ระบบลบหมอกและเคลียร์บ�
 
 
 
--- ==========================================
--- 📌 [หมวดหมู่ ESP] ESP รถไฟเฉพาะคันที่ใกล้ที่สุดเพียงคันเดียว
--- ==========================================
-local espPage = (pages and (pages["ESP"] or pages["4. ESP"] or pages["ระบบ ESP"])) or localPlayer:WaitForChild("PlayerGui"):FindFirstChildOfClass("ScreenGui")
-
-getgenv().ClosestTrainESPEnabled = false
-
--- สร้างปุ่มเปิด/ปิดในหน้า ESP
-local closestTrainBtn = Instance.new("TextButton")
-closestTrainBtn.Name = "ClosestTrainESPButton"
-closestTrainBtn.Parent = espPage
-closestTrainBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดง (ปิดอยู่)
-closestTrainBtn.Size = UDim2.new(1, 0, 0, 40)
-closestTrainBtn.Font = Enum.Font.GothamBold
-closestTrainBtn.Text = "🚂 ESP รถไฟที่ใกล้ที่สุด: OFF"
-closestTrainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closestTrainBtn.TextSize = 13
-closestTrainBtn.ZIndex = 10
-
-local closestTrainCorner = Instance.new("UICorner")
-closestTrainCorner.CornerRadius = UDim.new(0, 6)
-closestTrainCorner.Parent = closestTrainBtn
-
--- คำค้นหาชื่อรถไฟ
-local trainKeywords = {"train", "locomotive", "wagon", "carriage", "รถไฟ", "โบกี้"}
-
-local function isTrain(name)
-    name = name:lower()
-    for _, keyword in ipairs(trainKeywords) do
-        if name:find(keyword) then
-            return true
-        end
-    end
-    return false
-end
-
--- ตัวแปรเก็บสถานะขบวนรถไฟที่กำลังแสดงผลอยู่
-local currentClosestObj = nil
-
-local function removeClosestTrainESP()
-    pcall(function()
-        if currentClosestObj then
-            local targetPart = currentClosestObj:IsA("Model") and (currentClosestObj.PrimaryPart or currentClosestObj:FindFirstChildWhichIsA("BasePart")) or currentClosestObj
-            if targetPart then
-                local hl = targetPart:FindFirstChild("ClosestTrainHighlight")
-                local bill = targetPart:FindFirstChild("ClosestTrainBillboard")
-                if hl then hl:Destroy() end
-                if bill then bill:Destroy() end
-            end
-            currentClosestObj = nil
-        end
-        
-        -- ล้างค่าเผื่อตกค้างใน Workspace ทั้งหมด
-        for _, obj in ipairs(Workspace:GetDescendants()) do
-            if (obj:IsA("Model") or obj:IsA("BasePart")) and isTrain(obj.Name) then
-                local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
-                if targetPart then
-                    local hl = targetPart:FindFirstChild("ClosestTrainHighlight")
-                    local bill = targetPart:FindFirstChild("ClosestTrainBillboard")
-                    if hl then hl:Destroy() end
-                    if bill then bill:Destroy() end
-                end
-            end
-        end
-    end)
-end
-
--- ลูปค้นหาและอัปเดตเฉพาะรถไฟที่ใกล้ที่สุดคันเดียว
-task.spawn(function()
-    while true do
-        task.wait(0.3)
-        pcall(function()
-            if getgenv().ClosestTrainESPEnabled then
-                if not localPlayer.Character or not localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    return
-                end
-                local rootPart = localPlayer.Character.HumanoidRootPart
-
-                local nearestTrain = nil
-                local shortestDistance = math.huge
-
-                -- 1. วนหาขบวนรถไฟที่ใกล้ตัวที่สุดในแมพ
-                for _, obj in ipairs(Workspace:GetDescendants()) do
-                    if (obj:IsA("Model") or obj:IsA("BasePart")) and isTrain(obj.Name) then
-                        local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
-                        
-                        if targetPart and targetPart:IsA("BasePart") then
-                            local distance = (targetPart.Position - rootPart.Position).Magnitude
-                            if distance < shortestDistance then
-                                shortestDistance = distance
-                                nearestTrain = obj
-                            end
-                        end
-                    end
-                end
-
-                -- 2. จัดการเคลียร์ ESP ของคันเก่าถ้าเป้าหมายเปลี่ยนไป
-                if currentClosestObj ~= nearestTrain then
-                    removeClosestTrainESP()
-                    currentClosestObj = nearestTrain
-                end
-
-                -- 3. ถ้าเจอรถไฟที่ใกล้ที่สุด ให้วาดกรอบสีเขียว/เขียวอ่อนเฉพาะคันนั้น
-                if nearestTrain then
-                    local targetPart = nearestTrain:IsA("Model") and (nearestTrain.PrimaryPart or nearestTrain:FindFirstChildWhichIsA("BasePart")) or nearestTrain
-                    
-                    if targetPart and targetPart:IsA("BasePart") then
-                        -- สร้างกรอบ Highlight (ขอบเขียวเข้ม / ด้านในเขียวอ่อน)
-                        local highlight = targetPart:FindFirstChild("ClosestTrainHighlight")
                         if not highlight then
                             highlight = Instance.new("Highlight")
                             highlight.Name = "ClosestTrainHighlight"
@@ -1028,19 +919,8 @@ task.spawn(function()
     end
 end)
 
--- ปุ่มคลิกเปิด/ปิดการทำงาน
-closestTrainBtn.MouseButton1Down:Connect(function()
-    getgenv().ClosestTrainESPEnabled = not getgenv().ClosestTrainESPEnabled
-    
-    if getgenv().ClosestTrainESPEnabled then
-        closestTrainBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- สีเขียวเมื่อเปิด
-        closestTrainBtn.Text = "🚂 ESP รถไฟที่ใกล้ที่สุด: ON"
-    else
-        closestTrainBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดงเมื่อปิด
-        closestTrainBtn.Text = "🚂 ESP รถไฟที่ใกล้ที่สุด: OFF"
-        removeClosestTrainESP()
-    end
-end)
+
+
 
 
 
