@@ -150,30 +150,17 @@ ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 10)
 
--- ==========================================
--- 📌 เพิ่มหมวดหมู่ "ออโต้เทรด" (Auto-Trade)
--- ==========================================
-local AutoTradeBtn = Instance.new("TextButton")
-AutoTradeBtn.Name = "AutoTradeBtn"
-AutoTradeBtn.Parent = SidebarFrame
-AutoTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-AutoTradeBtn.Size = UDim2.new(1, 0, 0, 35)
-AutoTradeBtn.Font = Enum.Font.GothamSemibold
-AutoTradeBtn.Text = "🐔 ออโต้ ไก่"
-AutoTradeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-AutoTradeBtn.TextSize = 13
+-- ปุ่มหมวดหมู่ "ออโตเรด" (สำหรับใส่ใน SidebarFrame)
+local AutoRateBtn = Instance.new("TextButton")
+AutoRateBtn.Name = "AutoRateBtn"
+AutoRateBtn.Parent = SidebarFrame
+AutoRateBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoRateBtn.Size = UDim2.new(1, 0, 0, 35)
+AutoRateBtn.Font = Enum.Font.GothamSemibold
+AutoRateBtn.Text = "⚡ ออโตเรด"
+AutoRateBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoRateBtn.TextSize = 13
 
-local AutoTradeCorner = Instance.new("UICorner")
-AutoTradeCorner.CornerRadius = UDim.new(0, 6)
-AutoTradeCorner.Parent = AutoTradeBtn
-
--- ฟังก์ชันเมื่อกดเลือกหมวดหมู่นี้
-AutoTradeBtn.MouseButton1Click:Connect(function()
-    -- เคลียร์ของเก่าในหน้าจอแสดงผลฝั่งขวาทิ้งก่อน
-    for _, child in ipairs(ContentContainer:GetChildren()) do
-        if child:IsA("GuiObject") and child ~= ContentLayout then
-            child:Destroy()
-        end
-    end
-    
-    
+local AutoRateCorner = Instance.new("UICorner")
+AutoRateCorner.CornerRadius = UDim.new(0, 6)
+AutoRateCorner.Parent = AutoRateBtn
