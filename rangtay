@@ -212,9 +212,8 @@ switchPage("1. หน้าแรก")
 
 
 
-
 -- ==========================================
--- ⚙️ เพิ่มปุ่มระบบ "ออโต้ Actionable" ไว้ในหน้า "6. ตั้งค่า"
+-- ⚙️ ระบบออโต้ Actionable (ฉบับแก้ไขให้ทำงานจริง)
 -- ==========================================
 local settingsPage = pages["6. ตั้งค่า"]
 
@@ -244,24 +243,28 @@ autoToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ระบบเบื้องหลังส่งรีโมท Actionable อัตโนมัติ
+-- ค้นหาและดักยิง RemoteEvent อัตโนมัติเมื่อเปิดใช้งาน
 task.spawn(function()
     while true do
-        task.wait(0.3)
+        task.wait(0.2)
         if _G.AutoActionable then
             pcall(function()
-                -- ค้นหา Remote ชื่อ Actionable ในเกม
-                local actionableRemote = ReplicatedStorage:FindFirstChild("Actionable", true) 
-                    or Workspace:FindFirstChild("Actionable", true)
-                
-                if actionableRemote and actionableRemote:IsA("RemoteEvent") then
-                    -- วนหาพาร์ทหรือไอเทมใกล้ตัวเพื่อส่งค่าโต้ตอบ
+                -- ค้นหา RemoteEvent ที่ชื่อว่า "Actionable" ทั่วทั้งเกม
+                local actionableRemote = nil
+                for _, descendant in ipairs(game:GetDescendants()) do
+                    if descendant.Name == "Actionable" and (descendant:IsA("RemoteEvent") or descendant:IsA("UnreliableRemoteEvent")) then
+                        actionableRemote = descendant
+                        break
+                    end
+                end
+
+                if actionableRemote and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local rootPart = localPlayer.Character.HumanoidRootPart
+                    -- วัตถุรอบตัวที่อยู่ในระยะ 20 สตั๊ด
                     for _, obj in ipairs(Workspace:GetDescendants()) do
-                        if obj:IsA("BasePart") and (localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                            local dist = (obj.Position - localPlayer.Character.HumanoidRootPart.Position).Magnitude
-                            if dist < 15 then -- ระยะใกล้เคียง 15 สตั๊ด
-                                actionableRemote:FireServer(obj)
-                            end
+                        if obj:IsA("BasePart") and (obj.Position - rootPart.Position).Magnitude <= 20 then
+                            -- ลองส่งค่ารีโมทเพื่อโต้ตอบกับวัตถุนั้นๆ
+                            actionableRemote:FireServer(obj)
                         end
                     end
                 end
@@ -269,7 +272,6 @@ task.spawn(function()
         end
     end
 end)
-
 
 
 
