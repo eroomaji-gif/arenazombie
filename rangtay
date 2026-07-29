@@ -581,3 +581,122 @@ DropAllBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
+
+
+
+
+
+
+-- ==========================================
+-- 📌 [ระบบ ESP] ปุ่มมองหาไอเทมรอบตัว
+-- ==========================================
+local espPage = pages["4. esp"]
+
+_G.EnableItemESP = false
+
+local itemEspBtn = Instance.new("TextButton")
+itemEspBtn.Name = "ItemESPButton"
+itemEspBtn.Parent = espPage
+itemEspBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+itemEspBtn.Size = UDim2.new(1, 0, 0, 40)
+itemEspBtn.Font = Enum.Font.GothamSemibold
+itemEspBtn.Text = "📦 ESP ไอเทม: OFF"
+itemEspBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+itemEspBtn.TextSize = 13
+
+local itemEspCorner = Instance.new("UICorner")
+itemEspCorner.CornerRadius = UDim.new(0, 6)
+itemEspCorner.Parent = itemEspBtn
+
+itemEspBtn.MouseButton1Click:Connect(function()
+    _G.EnableItemESP = not _G.EnableItemESP
+    if _G.EnableItemESP then
+        itemEspBtn.Text = "📦 ESP ไอเทม: ON"
+        itemEspBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        itemEspBtn.Text = "📦 ESP ไอเทม: OFF"
+        itemEspBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        -- ลบป้าย ESP และ Highlight ทิ้งเมื่อปิด
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                local hl = obj:FindFirstChild("ItemHighlight")
+                local bill = obj:FindFirstChild("ItemBillboard")
+                if hl then hl:Destroy() end
+                if bill then bill:Destroy() end
+            end
+        end
+    end
+end)
+
+-- ลูปทำงานเบื้องหลังเพื่อตรวจจับไอเทมและแสดงผล ESP
+task.spawn(function()
+    while true do
+        task.wait(1)
+        pcall(function()
+            if _G.EnableItemESP then
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    -- ค้นหาวัตถุที่เป็นชิ้นส่วนไอเทมหรือเครื่องมือในเกม (Tool หรือ Part ที่ไม่ใช่ตัวละคร)
+                    if obj:IsA("Tool") or (obj:IsA("BasePart") and not obj.Parent:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent)) then
+                        local targetPart = obj:IsA("Tool") and obj:FindFirstChildWhichIsA("BasePart") or obj
+                        
+                        if targetPart then
+                            -- 1. ใส่กรอบเรืองแสงสีฟ้าให้ไอเทม
+                            local highlight = targetPart:FindFirstChild("ItemHighlight")
+                            if not highlight then
+                                highlight = Instance.new("Highlight")
+                                highlight.Name = "ItemHighlight"
+                                highlight.Adornee = targetPart
+                                highlight.Parent = targetPart
+                                highlight.FillColor = Color3.fromRGB(100, 200, 255)
+                                highlight.OutlineColor = Color3.fromRGB(0, 150, 255)
+                                highlight.FillTransparency = 0.5
+                            end
+                            
+                            -- 2. สร้างป้ายชื่อและบอกระยะห่าง
+                            local billboard = targetPart:FindFirstChild("ItemBillboard")
+                            if not billboard then
+                                billboard = Instance.new("BillboardGui")
+                                billboard.Name = "ItemBillboard"
+                                billboard.Adornee = targetPart
+                                billboard.Size = UDim2.new(0, 120, 0, 40)
+                                billboard.StudsOffset = Vector3.new(0, 1.5, 0)
+                                billboard.AlwaysOnTop = true
+                                billboard.Parent = targetPart
+                                
+                                local textLabel = Instance.new("TextLabel")
+                                textLabel.Name = "DistanceText"
+                                textLabel.Size = UDim2.new(1, 0, 1, 0)
+                                textLabel.BackgroundTransparency = 1
+                                textLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+                                textLabel.TextScaled = true
+                                textLabel.Font = Enum.Font.GothamBold
+                                textLabel.TextStrokeTransparency = 0
+                                textLabel.Parent = billboard
+                            end
+                            
+                            -- คำนวณระยะห่างจากตัวผู้เล่น
+                            local textLabel = billboard:FindFirstChild("DistanceText")
+                            if textLabel and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                local rootPart = localPlayer.Character.HumanoidRootPart
+                                local distance = math.floor((targetPart.Position - rootPart.Position).Magnitude)
+                                textLabel.Text = "📦 " .. obj.Name .. "\n[" .. distance .. "m]"
+                            end
+                        end
+                    end
+                end
+            else
+                -- ล้างออกเมื่อปิด
+                for _, obj in ipairs(Workspace:GetDescendants()) do
+                    if obj:IsA("BasePart") then
+                        local hl = obj:FindFirstChild("ItemHighlight")
+                        local bill = obj:FindFirstChild("ItemBillboard")
+                        if hl then hl:Destroy() end
+                        if bill then bill:Destroy() end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
