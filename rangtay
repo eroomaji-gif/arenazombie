@@ -715,9 +715,16 @@ end)
 
 
 -- ==========================================
--- 📌 [ระบบสังหาร] ปุ่มล็อกหัวมอนสเตอร์ที่ใกล้ที่สุด
+-- 📌 [ระบบสังหาร] ปุ่มล็อกหัวมอนสเตอร์ (แก้ไขโค้ดให้กดติดแน่นอน)
 -- ==========================================
-local killPage = pages["3. สังหาร"]
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local Camera = Workspace.CurrentCamera
+local localPlayer = Players.LocalPlayer
+
+-- เช็คหน้าต่างเมนู (ถ้าหาไม่เจอ จะสร้างใส่ CoreGui หรือหน้าจอสำรองแทนเพื่อกันเกมบั๊ก)
+local killPage = (pages and pages["3. สังหาร"]) or localPlayer:WaitForChild("PlayerGui"):FindFirstChildOfClass("ScreenGui")
 
 getgenv().AutoLockHead = false
 
@@ -730,6 +737,7 @@ lockHeadBtn.Font = Enum.Font.GothamBold
 lockHeadBtn.Text = "🎯 ล็อกหัวมอน: OFF"
 lockHeadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 lockHeadBtn.TextSize = 13
+lockHeadBtn.ZIndex = 10 -- ดันปุ่มให้อยู่ชั้นบนสุดเพื่อให้กดโดนง่าย
 
 local lockHeadCorner = Instance.new("UICorner")
 lockHeadCorner.CornerRadius = UDim.new(0, 6)
@@ -761,7 +769,7 @@ local function getClosestMonsterHead()
                 local head = obj.Head
                 local distance = (head.Position - rootPart.Position).Magnitude
                 
-                if distance < shortestDistance and distance <= 100 then
+                if distance < shortestDistance and distance <= 150 then
                     shortestDistance = distance
                     closestHead = head
                 end
@@ -784,8 +792,8 @@ RunService.RenderStepped:Connect(function()
     end)
 end)
 
--- ปุ่มเปิด/ปิดการทำงาน
-lockHeadBtn.MouseButton1Click:Connect(function()
+-- ปุ่มเปิด/ปิดการทำงาน (ใช้ MouseButton1Down เผื่อบางตัวรันไม่รับ Click)
+lockHeadBtn.MouseButton1Down:Connect(function()
     getgenv().AutoLockHead = not getgenv().AutoLockHead
     
     if getgenv().AutoLockHead then
