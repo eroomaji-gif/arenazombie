@@ -291,4 +291,53 @@ end)
 
 
 
+
+
+-- ==========================================
+-- 📌 เพิ่มหมวดหมู่ใหม่: "การอัปเกรด"
+-- ==========================================
+
+-- 1. สร้างปุ่มหมวดหมู่ฝั่งซ้าย (Sidebar)
+local UpgradeBtn = Instance.new("TextButton")
+UpgradeBtn.Name = "UpgradeBtn"
+UpgradeBtn.Parent = SidebarFrame
+UpgradeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+UpgradeBtn.Size = UDim2.new(1, 0, 0, 35)
+UpgradeBtn.Font = Enum.Font.GothamSemibold
+UpgradeBtn.Text = "⬆️ การอัปเกรด"
+UpgradeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+UpgradeBtn.TextSize = 13
+
+local UpgradeCorner = Instance.new("UICorner")
+UpgradeCorner.CornerRadius = UDim.new(0, 6)
+UpgradeCorner.Parent = UpgradeBtn
+
+-- 2. สร้างหน้าต่างเนื้อหา (Container Page) ฝั่งขวา สำหรับหมวดหมู่นี้
+local UpgradePage = Instance.new("ScrollingFrame")
+UpgradePage.Name = "UpgradePage"
+UpgradePage.Parent = ContentContainer
+UpgradePage.BackgroundTransparency = 1
+UpgradePage.Size = UDim2.new(1, 0, 1, 0)
+UpgradePage.CanvasSize = UDim2.new(0, 0, 0, 300)
+UpgradePage.ScrollBarThickness = 4
+UpgradePage.Visible = false -- ซ่อนไว้ก่อน (จะแสดงเมื่อกดปุ่มหมวดหมู่)
+
+local UpgradePageLayout = Instance.new("UIListLayout")
+UpgradePageLayout.Parent = UpgradePage
+UpgradePageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UpgradePageLayout.Padding = UDim.new(0, 10)
+
+-- 3. ฟังก์ชันกดสลับหน้าจอ (เมื่อคลิกปุ่ม "การอัปเกรด" จะแสดงหน้านี้ และซ่อนหน้าอื่น)
+UpgradeBtn.MouseButton1Click:Connect(function()
+    for _, child in ipairs(ContentContainer:GetChildren()) do
+        if child:IsA("ScrollingFrame") then
+            child.Visible = false
+        end
+    end
+    UpgradePage.Visible = true
+end)
+
+
+
+
                         
