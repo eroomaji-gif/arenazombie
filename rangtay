@@ -706,3 +706,93 @@ task.spawn(function()
         end)
     end
 end)
+
+
+
+
+
+
+
+
+-- ==========================================
+-- 📌 [ระบบสังหาร] ปุ่มล็อกหัวมอนสเตอร์ที่ใกล้ที่สุด
+-- ==========================================
+local killPage = pages["3. สังหาร"]
+
+getgenv().AutoLockHead = false
+
+local lockHeadBtn = Instance.new("TextButton")
+lockHeadBtn.Name = "LockHeadButton"
+lockHeadBtn.Parent = killPage
+lockHeadBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดง (ปิดอยู่)
+lockHeadBtn.Size = UDim2.new(1, 0, 0, 40)
+lockHeadBtn.Font = Enum.Font.GothamBold
+lockHeadBtn.Text = "🎯 ล็อกหัวมอน: OFF"
+lockHeadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+lockHeadBtn.TextSize = 13
+
+local lockHeadCorner = Instance.new("UICorner")
+lockHeadCorner.CornerRadius = UDim.new(0, 6)
+lockHeadCorner.Parent = lockHeadBtn
+
+-- ฟังก์ชันหาหัวของมอนสเตอร์ที่อยู่ใกล้ที่สุด
+local function getClosestMonsterHead()
+    local closestHead = nil
+    local shortestDistance = math.huge
+    
+    if not localPlayer.Character or not localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        return nil
+    end
+    
+    local rootPart = localPlayer.Character.HumanoidRootPart
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("Head") then
+            -- เช็คว่าไม่ใช่ตัวผู้เล่นคนอื่น (คัดเฉพาะมอนสเตอร์/NPC)
+            local isPlayer = false
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character == obj then
+                    isPlayer = true
+                    break
+                end
+            end
+            
+            if not isPlayer and obj.Humanoid.Health > 0 then
+                local head = obj.Head
+                local distance = (head.Position - rootPart.Position).Magnitude
+                
+                if distance < shortestDistance and distance <= 100 then
+                    shortestDistance = distance
+                    closestHead = head
+                end
+            end
+        end
+    end
+    
+    return closestHead
+end
+
+-- ลูปการทำงานล็อกเป้าหมาย
+RunService.RenderStepped:Connect(function()
+    if not getgenv().AutoLockHead then return end
+    
+    pcall(function()
+        local targetHead = getClosestMonsterHead()
+        if targetHead then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+        end
+    end)
+end)
+
+-- ปุ่มเปิด/ปิดการทำงาน
+lockHeadBtn.MouseButton1Click:Connect(function()
+    getgenv().AutoLockHead = not getgenv().AutoLockHead
+    
+    if getgenv().AutoLockHead then
+        lockHeadBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- สีเขียวเมื่อเปิด
+        lockHeadBtn.Text = "🎯 ล็อกหัวมอน: ON"
+    else
+        lockHeadBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดงเมื่อปิด
+        lockHeadBtn.Text = "🎯 ล็อกหัวมอน: OFF"
+    end
+end)
