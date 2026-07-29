@@ -734,7 +734,7 @@ lockHeadBtn.Parent = killPage
 lockHeadBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดง (ปิดอยู่)
 lockHeadBtn.Size = UDim2.new(1, 0, 0, 40)
 lockHeadBtn.Font = Enum.Font.GothamBold
-lockHeadBtn.Text = "🎯 ล็อกหัวมอน: OFF"
+lockHeadBtn.Text = "ล็อกหัวมอน: OFF"
 lockHeadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 lockHeadBtn.TextSize = 13
 lockHeadBtn.ZIndex = 10 -- ดันปุ่มให้อยู่ชั้นบนสุดเพื่อให้กดโดนง่าย
@@ -798,7 +798,7 @@ lockHeadBtn.MouseButton1Down:Connect(function()
     
     if getgenv().AutoLockHead then
         lockHeadBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- สีเขียวเมื่อเปิด
-        lockHeadBtn.Text = "🎯 ล็อกหัวมอน: ON"
+        lockHeadBtn.Text = "ล็อกหัวมอน: ON"
     else
         lockHeadBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- สีแดงเมื่อปิด
         lockHeadBtn.Text = "🎯 ล็อกหัวมอน: OFF"
