@@ -522,4 +522,62 @@ Btn2.MouseButton1Click:Connect(function()
 end)
 
 
+-- ==========================================
+-- 📌 [ระบบฟาร์ม] ปุ่มทิ้งของทั้งหมดในกระเป๋า 10 ครั้ง
+-- ==========================================
+local farmPage = pages["2. ฟาม"]
+
+local DropAllBtn = Instance.new("TextButton")
+DropAllBtn.Name = "DropAllButton"
+DropAllBtn.Parent = farmPage
+DropAllBtn.BackgroundColor3 = Color3.fromRGB(180, 100, 30) -- สีส้ม/น้ำตาล สำหรับปุ่มฟาร์ม/จัดการไอเทม
+DropAllBtn.Size = UDim2.new(1, 0, 0, 40)
+DropAllBtn.Font = Enum.Font.GothamBold
+DropAllBtn.Text = "🗑️ ทิ้งของในกระเป๋า (10 ครั้ง)"
+DropAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DropAllBtn.TextSize = 13
+
+local DropAllCorner = Instance.new("UICorner")
+DropAllCorner.CornerRadius = UDim.new(0, 6)
+DropAllCorner.Parent = DropAllBtn
+
+-- ฟังก์ชันหา Remote สำหรับทิ้งของ หรือดรอปไอเทมในเกม
+DropAllBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        -- ค้นหา RemoteEvent ที่เกี่ยวข้องกับการทิ้งของ (Drop, Toss, Dispose หรือ Backpack)
+        local dropRemote = nil
+        for _, descendant in ipairs(game:GetDescendants()) do
+            local nameLower = descendant.Name:lower()
+            if (nameLower:find("drop") or nameLower:find("toss") or nameLower:find("inventory") or nameLower:find("item")) 
+               and (descendant:IsA("RemoteEvent") or descendant:IsA("UnreliableRemoteEvent")) then
+                dropRemote = descendant
+                break
+            end
+        end
+
+        -- วนลูปทิ้งของ 10 ครั้งตามที่ต้องการ
+        task.spawn(function()
+            for i = 1, 10 do
+                -- หากมีตัวละครและกระเป๋า
+                local backpack = localPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if dropRemote then
+                            -- ยิงรีโมตเพื่อทิ้งไอเทมชิ้นนั้นๆ
+                            dropRemote:FireServer(item)
+                        else
+                            -- วิธีสำรอง: สั่งให้ตัวละครหยิบของออกจากกระเป๋ามาไว้ในมือแล้วทิ้ง
+                            local char = localPlayer.Character
+                            if char and localPlayer.Humanoid then
+                                localPlayer.Humanoid:EquipTool(item)
+                                task.wait(0.05)
+                            end
+                        end
+                    end
+                end
+                task.wait(0.1) -- หน่วงเวลาเล็กน้อยกันเกมบัณทึกหรือดีด (Anti-Spam)
+            end
+        end)
+    end)
+end)
 
