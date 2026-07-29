@@ -150,3 +150,83 @@ ContentLayout.Parent = ContentContainer
 ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ContentLayout.Padding = UDim.new(0, 10)
 
+
+
+
+
+
+-- ==========================================
+-- 📌 โค้ดสร้างหมวดหมู่ "ออโต้เทรด" (Auto-Trade) แบบเดี่ยวๆ
+-- ==========================================
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+
+-- สร้างหน้าจอทดสอบ (ถ้ายังไม่มี ScreenGui หลัก)
+local ScreenGui = playerGui:FindFirstChild("FlexibleMenuGui") or Instance.new("ScreenGui", playerGui)
+ScreenGui.Name = "FlexibleMenuGui"
+
+-- สมมติว่าเป็นเฟรมหลัก (MainFrame) และ Sidebar เก่าของคุณ
+-- สร้างปุ่มหมวดหมู่ "ออโต้เทรด" สำหรับใส่ใน Sidebar
+local AutoTradeBtn = Instance.new("TextButton")
+AutoTradeBtn.Name = "AutoTradeBtn"
+AutoTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+AutoTradeBtn.Size = UDim2.new(1, 0, 0, 35)
+AutoTradeBtn.Font = Enum.Font.GothamSemibold
+AutoTradeBtn.Text = "🐔 ผ่านเหรดชิวๆ "
+AutoTradeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoTradeBtn.TextSize = 13
+
+local AutoTradeCorner = Instance.new("UICorner")
+AutoTradeCorner.CornerRadius = UDim.new(0, 6)
+AutoTradeCorner.Parent = AutoTradeBtn
+
+-- ฟังก์ชันเมื่อกดเลือกหมวดหมู่ "ออโต้เทรด"
+AutoTradeBtn.MouseButton1Click:Connect(function()
+    -- สมมติว่า ContentContainer คือ ScrollingFrame ฝั่งขวาของคุณ
+    -- ให้เคลียร์ของเก่าทิ้งก่อนสร้างใหม่
+    -- for _, child in ipairs(ContentContainer:GetChildren()) do
+    --     if child:IsA("GuiObject") and child ~= ContentLayout then child:Destroy() end
+    -- end
+
+    -- หัวข้อในหน้าออโต้เทรด
+    local TradeLabel = Instance.new("TextLabel")
+    TradeLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TradeLabel.Size = UDim2.new(1, -10, 0, 40)
+    TradeLabel.Font = Enum.Font.GothamBold
+    TradeLabel.Text = "ระบบตั้งค่า Auto-Trade"
+    TradeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TradeLabel.TextSize = 14
+    
+    local LabelCorner = Instance.new("UICorner")
+    LabelCorner.CornerRadius = UDim.new(0, 6)
+    LabelCorner.Parent = TradeLabel
+
+    -- ปุ่มเปิด/ปิด ระบบออโต้เทรด
+    local ToggleTradeBtn = Instance.new("TextButton")
+    ToggleTradeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    ToggleTradeBtn.Size = UDim2.new(1, -10, 0, 40)
+    ToggleTradeBtn.Font = Enum.Font.GothamBold
+    ToggleTradeBtn.Text = "สถานะ: ปิด (OFF)"
+    ToggleTradeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleTradeBtn.TextSize = 14
+
+    local ToggleTradeCorner = Instance.new("UICorner")
+    ToggleTradeCorner.CornerRadius = UDim.new(0, 6)
+    ToggleTradeCorner.Parent = ToggleTradeBtn
+
+    local isTrading = false
+    ToggleTradeBtn.MouseButton1Click:Connect(function()
+        isTrading = not isTrading
+        if isTrading then
+            ToggleTradeBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+            ToggleTradeBtn.Text = "สถานะ: เปิด (ON)"
+            -- [ใส่โค้ดการทำงาน Auto-Trade ตรงนี้]
+        else
+            ToggleTradeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+            ToggleTradeBtn.Text = "สถานะ: ปิด (OFF)"
+            -- [ใส่โค้ดหยุดการทำงาน Auto-Trade ตรงนี้]
+        end
+    end)
+end)
+
